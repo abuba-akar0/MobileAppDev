@@ -22,15 +22,15 @@ class QuickLearnHome extends StatefulWidget {
 class _QuickLearnHomeState extends State<QuickLearnHome> {
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
-  List<Map<String, String>> cards = [
-    {'q': 'Flutter is developed by?', 'a': 'Google', 'show': 'false'},
-    {'q': 'What is Dart?', 'a': 'A programming language for Flutter.', 'show': 'false'},
-    {'q': 'What is Widget?', 'a': 'A basic building block of UI.', 'show': 'false'},
-    {'q': 'Hot Reload does?', 'a': 'Applies changes instantly.', 'show': 'false'},
-    {'q': 'setState() use?', 'a': 'Updates the widget tree.', 'show': 'false'},
-    {'q': 'Scaffold provides?', 'a': 'Material Design layout structure.', 'show': 'false'},
-    {'q': 'What is ListView?', 'a': 'Scrollable list of widgets.', 'show': 'false'},
-    {'q': 'What is Container?', 'a': 'A box to style and position child widgets.', 'show': 'false'},
+  List<Map<String, dynamic>> cards = [
+    {'q': 'Flutter is developed by?', 'a': 'Google', 'show': false, 'learned': false},
+    {'q': 'What is Dart?', 'a': 'A programming language for Flutter.', 'show': false, 'learned': false},
+    {'q': 'What is Widget?', 'a': 'A basic building block of UI.', 'show': false, 'learned': false},
+    {'q': 'Hot Reload does?', 'a': 'Applies changes instantly.', 'show': false, 'learned': false},
+    {'q': 'setState() use?', 'a': 'Updates the widget tree.', 'show': false, 'learned': false},
+    {'q': 'Scaffold provides?', 'a': 'Material Design layout structure.', 'show': false, 'learned': false},
+    {'q': 'What is ListView?', 'a': 'Scrollable list of widgets.', 'show': false, 'learned': false},
+    {'q': 'What is Container?', 'a': 'A box to style and position child widgets.', 'show': false, 'learned': false},
   ];
 
   int learned = 0;
@@ -39,13 +39,13 @@ class _QuickLearnHomeState extends State<QuickLearnHome> {
     await Future.delayed(const Duration(seconds: 1));
     setState(() {
       cards = [
-        {'q': 'MaterialApp used for?', 'a': 'Provides app structure.', 'show': 'false'},
-        {'q': 'Column arranges?', 'a': 'Widgets vertically.', 'show': 'false'},
-        {'q': 'Row arranges?', 'a': 'Widgets horizontally.', 'show': 'false'},
-        {'q': 'StatefulWidget?', 'a': 'Widget with changeable state.', 'show': 'false'},
-        {'q': 'StatelessWidget?', 'a': 'Widget without changing state.', 'show': 'false'},
-        {'q': 'Navigator used for?', 'a': 'Screen navigation.', 'show': 'false'},
-        {'q': 'BuildContext?', 'a': 'Stores widget location in tree.', 'show': 'false'},
+        {'q': 'MaterialApp used for?', 'a': 'Provides app structure.', 'show': false, 'learned': false},
+        {'q': 'Column arranges?', 'a': 'Widgets vertically.', 'show': false, 'learned': false},
+        {'q': 'Row arranges?', 'a': 'Widgets horizontally.', 'show': false, 'learned': false},
+        {'q': 'StatefulWidget?', 'a': 'Widget with changeable state.', 'show': false, 'learned': false},
+        {'q': 'StatelessWidget?', 'a': 'Widget without changing state.', 'show': false, 'learned': false},
+        {'q': 'Navigator used for?', 'a': 'Screen navigation.', 'show': false, 'learned': false},
+        {'q': 'BuildContext?', 'a': 'Stores widget location in tree.', 'show': false, 'learned': false},
       ];
       learned = 0;
     });
@@ -55,13 +55,16 @@ class _QuickLearnHomeState extends State<QuickLearnHome> {
     final newCard = {
       'q': 'New Question ${cards.length + 1}',
       'a': 'This is its answer.',
-      'show': 'false'
+      'show': false,
+      'learned': false
     };
     cards.insert(0, newCard);
     _listKey.currentState?.insertItem(0);
+    setState(() {});
   }
 
   void _markLearned(int index) {
+    if (index < 0 || index >= cards.length) return;
     final removed = cards[index];
     cards.removeAt(index);
     _listKey.currentState?.removeItem(
@@ -75,26 +78,33 @@ class _QuickLearnHomeState extends State<QuickLearnHome> {
     setState(() => learned++);
   }
 
-  Widget _buildCard(Map<String, String> card, int index) {
-    final isShown = card['show'] == 'true';
+  void _tapToReveal(int index) {
+    setState(() {
+      cards[index]['show'] = !cards[index]['show'];
+      if (cards[index]['show'] == true && cards[index]['learned'] == false) {
+        // count as learned once
+        cards[index]['learned'] = true;
+        learned++;
+      }
+    });
+  }
+
+  Widget _buildCard(Map<String, dynamic> card, int index) {
+    final isShown = card['show'];
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          card['show'] = isShown ? 'false' : 'true';
-        });
-      },
+      onTap: () => _tapToReveal(index),
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         color: isShown ? Colors.indigo.shade100 : Colors.white,
         elevation: 3,
         child: Container(
-          height: 120, // makes it look square-like
+          height: 120, // square shape
           alignment: Alignment.center,
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Text(
-              isShown ? card['a']! : card['q']!,
+              isShown ? card['a'] : card['q'],
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16),
             ),
@@ -106,6 +116,7 @@ class _QuickLearnHomeState extends State<QuickLearnHome> {
 
   @override
   Widget build(BuildContext context) {
+    int total = cards.length + learned;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _addCard,
@@ -120,7 +131,7 @@ class _QuickLearnHomeState extends State<QuickLearnHome> {
               floating: true,
               expandedHeight: 120,
               flexibleSpace: FlexibleSpaceBar(
-                title: Text('Learned: $learned / ${cards.length + learned}'),
+                title: Text('Progress: $learned of $total learned'),
                 background: Container(color: Colors.indigo),
               ),
             ),
